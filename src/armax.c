@@ -31,6 +31,7 @@ typedef struct maxEntry
 
 
 void psv_resign(const char* src_file);
+void get_psv_filename(char* psvName, const char* dirName);
 
 static void printMAXHeader(const maxHeader_t *header)
 {
@@ -123,22 +124,11 @@ int extractMAX(const char *save)
     fread(&header, 1, sizeof(maxHeader_t), f);
 
     char dirName[sizeof(header.dirName) + 1];
-	char psvName[128];
-	char *ch = &dirName[12];
+    char psvName[128];
 
     memcpy(dirName, header.dirName, sizeof(header.dirName));
     dirName[32] = '\0';
-	
-	memcpy(psvName, dirName, 12);
-	psvName[12] = 0;
-	
-	while (*ch)
-	{
-		char tmp[3];
-		snprintf(tmp, sizeof(tmp), "%02X", *ch++);
-		strcat(psvName, tmp);
-	}
-	strcat(psvName, ".PSV");
+	get_psv_filename(psvName, dirName);
 
     // Get compressed file entries
     u8 *compressed = malloc(header.compressedSize);
