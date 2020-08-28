@@ -72,7 +72,6 @@ int extractPSU(const char *save)
 
 	fwrite(&ph, sizeof(psv_header_t), 1, psvFile);
 
-
     // Skip "." and ".."
     fseek(psuFile, sizeof(ps2_McFsEntry)*2, SEEK_CUR);
 
@@ -111,8 +110,8 @@ int extractPSU(const char *save)
 		ps2fi[i].attribute = entry.mode;
 		ps2fi[i].positionInFile = dataPos;
 		ps2fi[i].filesize = entry.length;
-    	memcpy(&ps2fi[i].create, &entry.created, sizeof(sceMcStDateTime));
-    	memcpy(&ps2fi[i].modified, &entry.modified, sizeof(sceMcStDateTime));
+		memcpy(&ps2fi[i].create, &entry.created, sizeof(sceMcStDateTime));
+		memcpy(&ps2fi[i].modified, &entry.modified, sizeof(sceMcStDateTime));
 		memcpy(&ps2fi[i].filename, &entry.name, sizeof(ps2fi[i].filename));
 		
 		dataPos += entry.length;
@@ -161,7 +160,6 @@ int extractPSU(const char *save)
     // Copy each file entry
     for(i = 0; i < numFiles; i++)
     {
-        
         fread(&entry, 1, sizeof(ps2_McFsEntry), psuFile);
         
         data = malloc(entry.length);

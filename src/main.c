@@ -1,16 +1,19 @@
-//ps3-psvresigner by @dots_tb - Resigns non-console specific PS3 PSV savefiles. PSV files embed PS1 and PS2 save data. This does not inject!
-//With help from the CBPS (https://discord.gg/2nDCbxJ) , especially:
-// @AnalogMan151
-// @teakhanirons
-// Silica
-// @notzecoxao
-// @nyaaasen 
+/*
+*
+*	PSV Save Converter - (c) 2020 by Bucanero - www.bucanero.com.ar
+*
+* This tool is based on the ps3-psvresigner by @dots_tb (https://github.com/dots-tb/ps3-psvresigner)
+*
+* PS2 Save format code from:
+*	- https://github.com/PMStanley/PSV-Exporter
+*	- https://github.com/root670/CheatDevicePS2
+*
+*/
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <stdbool.h>
 
 #include "aes.h"
 #include "sha1.h"
@@ -39,8 +42,13 @@ void XorWithByte(uint8_t* buf, uint8_t byte, int length)
 }
 
 static void usage(char *argv[])
-{	
-	printf("Usage: %s <savefile>.PSV\n",argv[0]);
+{
+	printf("USAGE: %s <filename>\n\n", argv[0]);
+	printf("INPUT FORMATS\n");
+	printf(" .mcs            PS1 MCS File\n");
+	printf(" .max            PS2 ActionReplay Max File\n");
+	printf(" .psu            PS2 EMS File (uLaunchELF)\n\n");
+	return;
 }
 
 void generateHash(uint8_t *input, uint8_t *dest, size_t sz, int type) {
