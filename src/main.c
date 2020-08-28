@@ -21,13 +21,14 @@
 
 #define PSV_MAGIC 0x50535600
 
-uint8_t key[2][0x10] = {
+const uint8_t key[2][0x10] = {
 							{0xFA, 0x72, 0xCE, 0xEF, 0x59, 0xB4, 0xD2, 0x98, 0x9F, 0x11, 0x19, 0x13, 0x28, 0x7F, 0x51, 0xC7}, 
 							{0xAB, 0x5A, 0xBC, 0x9F, 0xC1, 0xF4, 0x9D, 0xE6, 0xA0, 0x51, 0xDB, 0xAE, 0xFA, 0x51, 0x88, 0x59}
 						};
-uint8_t iv[0x10] = {0xB3, 0x0F, 0xFE, 0xED, 0xB7, 0xDC, 0x5E, 0xB7, 0x13, 0x3D, 0xA6, 0x0D, 0x1B, 0x6B, 0x2C, 0xDC};
+const uint8_t iv[0x10] = {0xB3, 0x0F, 0xFE, 0xED, 0xB7, 0xDC, 0x5E, 0xB7, 0x13, 0x3D, 0xA6, 0x0D, 0x1B, 0x6B, 0x2C, 0xDC};
 
 
+int extractMAX(const char *save);
 
 void XorWithByte(uint8_t* buf, uint8_t byte, int length)
 {
@@ -41,7 +42,7 @@ static void usage(char *argv[])
 	printf("Usage: %s <savefile>.PSV\n",argv[0]);
 }
 
-void generateHash(const char *input, char *dest, size_t sz, int type) {
+void generateHash(uint8_t *input, uint8_t *dest, size_t sz, int type) {
 	struct AES_ctx aes_ctx;
 
 	uint8_t salt[0x40];
@@ -69,13 +70,12 @@ void generateHash(const char *input, char *dest, size_t sz, int type) {
 		XorWithIv(salt + 0x10, work_buf);
 		
 	} else if(type == 2) {//PS2
-		uint64_t laid_paid[2]  = {	
-								__builtin_bswap64((uint64_t)0x1070000002000001L),
-								__builtin_bswap64((uint64_t)0x10700003FF000001L)
-								};
+		uint8_t laid_paid[16]  = {	
+			0x10, 0x70, 0x00, 0x00, 0x02, 0x00, 0x00, 0x01, 0x10, 0x70, 0x00, 0x03, 0xFF, 0x00, 0x00, 0x01 };
+
 		memcpy(salt, salt_seed, 0x14);
-		XorWithIv(key[0], laid_paid);
-		AES_init_ctx_iv(&aes_ctx, key[0], iv);
+		XorWithIv(laid_paid, key[0]);
+		AES_init_ctx_iv(&aes_ctx, laid_paid, iv);
 		AES_CBC_decrypt_buffer(&aes_ctx, salt, 0x40);
 	}
 	
@@ -105,18 +105,10 @@ void generateHash(const char *input, char *dest, size_t sz, int type) {
 	SHA1Final(dest, &sha1_ctx_2);
 }
 
-int main(int argc, char **argv)
+void psv_resign(const char* src_file)
 {
-	printf("\n=====ps3-psvresigner by @dots_tb=====");
-	printf("\nWith CBPS help especially: @AnalogMan151, @teakhanirons, Silica, @nyaaasen, and @notzecoxao\n");
-	printf("Resigns non-console specific PS3 PSV savefiles. PSV files embed PS1 and PS2 save data. This does not inject!\n\n");
-	if (argc != 2) {
-		usage(argv);
-		return 1;
-	}
-
 	FILE *fin = 0, *fout = 0;
-	fin = fopen(argv[1], "rb");
+	fin = fopen(src_file, "rb");
 	if (!fin) {
 		perror("Failed to open input file");
 		goto error;
@@ -124,7 +116,7 @@ int main(int argc, char **argv)
 
 	fseek(fin, 0, SEEK_END);
 	size_t sz = ftell(fin);
-	printf("File SZ: %x\n", sz);
+	printf("\nPSV File Size: %ld bytes\n", sz);
 	fseek(fin, 0, SEEK_SET);
 	
 	uint8_t *input = (unsigned char*) calloc (1, sz);
@@ -150,10 +142,8 @@ int main(int argc, char **argv)
 		printf("%02X ", input[HASH_OFFSET + i]);
 	}
 	printf("\n");
-		
-	char output_path[128];
-	sprintf(output_path,"%s.new.PSV",argv[1]);
-	fout = fopen(output_path, "wb");
+
+	fout = fopen(src_file, "wb");
 	if (!fout) {
 		perror("Failed to open output file");
 		free(input);
@@ -161,7 +151,7 @@ int main(int argc, char **argv)
 	}
 	fwrite(input,  1, sz, fout);
 	free(input);
-	printf("PSV resigned successfully: %s\n", output_path);
+	printf("PSV resigned successfully: %s\n", src_file);
 
 
 error:
@@ -169,6 +159,20 @@ error:
 		fclose(fin);
 	if (fout)
 		fclose(fout);	
+
+}
+
+int main(int argc, char **argv)
+{
+	printf("\n=====ps3-psvresigner by @dots_tb=====");
+	printf("\nWith CBPS help especially: @AnalogMan151, @teakhanirons, Silica, @nyaaasen, and @notzecoxao\n");
+	printf("Resigns non-console specific PS3 PSV savefiles. PSV files embed PS1 and PS2 save data. This does not inject!\n\n");
+	if (argc != 2) {
+		usage(argv);
+		return 1;
+	}
+
+	extractMAX(argv[1]);
 
 	return 0;
 }
