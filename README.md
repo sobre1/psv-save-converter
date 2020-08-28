@@ -10,7 +10,7 @@ This tool converts and resigns PS1 and PS2 savegame files to PlayStation 3 `.PSV
 
 ## Usage
 
-Drag and drop a modified PSV PSOne or PS2 save file onto the program. It will resign it so that you may use with your PS3 through USB.
+Drag and drop a PS1 or PS2 save file onto the program. It will convert and resign it so that you may use with your PS3 through USB.
 
 Or use CMD:
 ```bash
