@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <ctype.h>
 
 #include "aes.h"
 #include "sha1.h"
@@ -33,6 +34,21 @@ const uint8_t iv[0x10] = {0xB3, 0x0F, 0xFE, 0xED, 0xB7, 0xDC, 0x5E, 0xB7, 0x13, 
 
 int extractPSU(const char *save);
 int extractMAX(const char *save);
+int extractMCS(const char *save);
+
+char* endsWith(const char * a, const char * b)
+{
+	int al = strlen(a), bl = strlen(b);
+    
+	if (al < bl)
+		return NULL;
+
+	a += (al - bl);
+	while (*a)
+		if (toupper(*a++) != toupper(*b++)) return NULL;
+
+	return (char*) (a - bl);
+}
 
 void XorWithByte(uint8_t* buf, uint8_t byte, int length)
 {
@@ -43,6 +59,7 @@ void XorWithByte(uint8_t* buf, uint8_t byte, int length)
 
 static void usage(char *argv[])
 {
+	printf("This tool converts and resigns PS1/PS2 saves to PS3 .PSV savegame format.\n\n");
 	printf("USAGE: %s <filename>\n\n", argv[0]);
 	printf("INPUT FORMATS\n");
 	printf(" .mcs            PS1 MCS File\n");
@@ -88,9 +105,7 @@ void generateHash(uint8_t *input, uint8_t *dest, size_t sz, int type) {
 		AES_CBC_decrypt_buffer(&aes_ctx, salt, 0x40);
 	}
 	
-	
 	memset(salt + 0x14, 0, sizeof(salt) - 0x14);
-	
 	
 	XorWithByte(salt, 0x36, 0x40);
 		
@@ -173,15 +188,25 @@ error:
 
 int main(int argc, char **argv)
 {
-	printf("\n=====ps3-psvresigner by @dots_tb=====");
-	printf("\nWith CBPS help especially: @AnalogMan151, @teakhanirons, Silica, @nyaaasen, and @notzecoxao\n");
-	printf("Resigns non-console specific PS3 PSV savefiles. PSV files embed PS1 and PS2 save data. This does not inject!\n\n");
+	printf("\n psv-save-converter 0.1.0 - (c) 2020 by Bucanero\n");
+	printf(" (based on ps3-psvresigner by @dots_tb)\n\n");
+
 	if (argc != 2) {
 		usage(argv);
 		return 1;
 	}
 
-	extractMAX(argv[1]);
+	if (endsWith(argv[1], ".max"))
+		extractMAX(argv[1]);
+
+	else if (endsWith(argv[1], ".psu"))
+		extractPSU(argv[1]);
+
+	else if (endsWith(argv[1], ".mcs"))
+		extractMCS(argv[1]);
+
+	else
+		usage(argv);
 
 	return 0;
 }
