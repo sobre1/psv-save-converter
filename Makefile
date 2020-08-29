@@ -1,12 +1,12 @@
 ifeq ($(OS),Windows_NT)
-	TARGET_EXEC ?= ps3-psvresigner-win
+	TARGET_EXEC ?= psv-converter-win
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
-		TARGET_EXEC ?= ps3-psvresigner-linux
+		TARGET_EXEC ?= psv-converter-linux
 	endif
     ifeq ($(UNAME_S),Darwin)
-		TARGET_EXEC ?= ps3-psvresigner-macos
+		TARGET_EXEC ?= psv-converter-macos
 	endif
 endif
 
