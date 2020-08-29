@@ -93,7 +93,7 @@ void setMcDateTime(sceMcStDateTime* mc, struct tm *ftm)
     mc->Min = ftm->tm_min;
     mc->Hour = ftm->tm_hour;
     mc->Day = ftm->tm_mday;
-    mc->Month = ftm->tm_mon;
+    mc->Month = ftm->tm_mon + 1;
     mc->Year = ftm->tm_year + 1900;
 }
 
