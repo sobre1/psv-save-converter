@@ -35,6 +35,8 @@ const uint8_t iv[0x10] = {0xB3, 0x0F, 0xFE, 0xED, 0xB7, 0xDC, 0x5E, 0xB7, 0x13, 
 int extractPSU(const char *save);
 int extractMAX(const char *save);
 int extractMCS(const char *save);
+int extractPSX(const char *save);
+int extractCBS(const char *save);
 
 char* endsWith(const char * a, const char * b)
 {
@@ -63,6 +65,8 @@ static void usage(char *argv[])
 	printf("USAGE: %s <filename>\n\n", argv[0]);
 	printf("INPUT FORMATS\n");
 	printf(" .mcs            PS1 MCS File\n");
+	printf(" .psx            PS1 AR/GS/XP PSX File\n");
+	printf(" .cbs            PS2 CodeBreaker File\n");
 	printf(" .max            PS2 ActionReplay Max File\n");
 	printf(" .psu            PS2 EMS File (uLaunchELF)\n\n");
 	return;
@@ -204,6 +208,9 @@ int main(int argc, char **argv)
 
 	else if (endsWith(argv[1], ".mcs"))
 		extractMCS(argv[1]);
+
+	else if (endsWith(argv[1], ".psx"))
+		extractPSX(argv[1]);
 
 	else
 		usage(argv);
