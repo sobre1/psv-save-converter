@@ -60,6 +60,7 @@ int extractMCS(const char* mcsfile)
 
 	fwrite(input + 0x80, sz - 0x80, 1, pf);
 	fclose(pf);
+	free(input);
 
 	psv_resign(dstName);
 
@@ -119,6 +120,7 @@ int extractPSX(const char* mcsfile)
 
 	fwrite(input + 0x36, sz - 0x36, 1, pf);
 	fclose(pf);
+	free(input);
 
 	psv_resign(dstName);
 

@@ -212,6 +212,9 @@ int main(int argc, char **argv)
 	else if (endsWith(argv[1], ".psx"))
 		extractPSX(argv[1]);
 
+	else if (endsWith(argv[1], ".cbs"))
+		extractCBS(argv[1]);
+
 	else
 		usage(argv);
 
