@@ -192,7 +192,7 @@ error:
 
 int main(int argc, char **argv)
 {
-	printf("\n psv-save-converter 0.1.0 - (c) 2020 by Bucanero\n");
+	printf("\n psv-save-converter v1.1.0 - (c) 2020 by Bucanero\n");
 	printf(" (based on ps3-psvresigner by @dots_tb)\n\n");
 
 	if (argc != 2) {
