@@ -69,6 +69,7 @@ static void usage(char *argv[])
 	printf(" .psx            PS1 AR/GS/XP PSX File\n");
 	printf(" .cbs            PS2 CodeBreaker File\n");
 	printf(" .max            PS2 ActionReplay Max File\n");
+	printf(" .xps            PS2 Xploder/SharkPort File\n");
 	printf(" .psu            PS2 EMS File (uLaunchELF)\n\n");
 	return;
 }
@@ -193,7 +194,7 @@ error:
 
 int main(int argc, char **argv)
 {
-	printf("\n psv-save-converter v1.1.0 - (c) 2020 by Bucanero\n");
+	printf("\n psv-save-converter v1.1.1 - (c) 2020 by Bucanero\n");
 	printf(" (based on ps3-psvresigner by @dots_tb)\n\n");
 
 	if (argc != 2) {

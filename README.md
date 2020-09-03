@@ -8,6 +8,7 @@ This tool converts and resigns PS1 and PS2 savegame files to PlayStation 3 `.PSV
 - `.psx` : PS1 AR/GS/XP PSX File
 - `.cbs` : PS2 CodeBreaker File
 - `.max` : PS2 ActionReplay Max File
+- `.xps` : PS2 Xploder/SharkPort File
 - `.psu` : PS2 EMS File (uLaunchELF)
 
 ## Usage
