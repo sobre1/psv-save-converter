@@ -37,6 +37,7 @@ int extractMAX(const char *save);
 int extractMCS(const char *save);
 int extractPSX(const char *save);
 int extractCBS(const char *save);
+int extractXPS(const char *save);
 
 char* endsWith(const char * a, const char * b)
 {
@@ -214,6 +215,9 @@ int main(int argc, char **argv)
 
 	else if (endsWith(argv[1], ".cbs"))
 		extractCBS(argv[1]);
+
+	else if (endsWith(argv[1], ".xps"))
+		extractXPS(argv[1]);
 
 	else
 		usage(argv);
