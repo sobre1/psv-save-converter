@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up shell
-        run: echo "C:\msys64\usr\bin\" >> $GITHUB_PATH
+        run: echo ::add-path::C:\msys64\usr\bin\
         shell: pwsh
       - name: Print system version
         run: |
