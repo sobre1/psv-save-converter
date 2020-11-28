@@ -23,6 +23,7 @@ jobs:
     env:
       MSYSTEM: ${{ matrix.mingw }}
       CHERE_INVOKING: 1
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     name: MSYS2 ${{ matrix.mingw }}
     steps:
       - uses: actions/checkout@v2
