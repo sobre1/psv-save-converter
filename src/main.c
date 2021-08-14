@@ -18,6 +18,7 @@
 
 #include "aes.h"
 #include "sha1.h"
+#include "ps2mc.h"
 
 #define SEED_OFFSET 0x8
 #define HASH_OFFSET 0x1c
@@ -70,7 +71,8 @@ static void usage(char *argv[])
 	printf(" .cbs            PS2 CodeBreaker File\n");
 	printf(" .max            PS2 ActionReplay Max File\n");
 	printf(" .xps            PS2 Xploder/SharkPort File\n");
-	printf(" .psu            PS2 EMS File (uLaunchELF)\n\n");
+	printf(" .psu            PS2 EMS File (uLaunchELF)\n");
+	printf(" .psv            PS3 PSV File (to PS1 .mcs/PS2 .psu)\n\n");
 	return;
 }
 
@@ -159,14 +161,8 @@ void psv_resign(const char* src_file)
 		goto error;
 	}
 	
-	printf("Old signature: ");
-	for(int i = 0; i < 0x14; i++ ) {
-		printf("%02X ",  input[HASH_OFFSET + i]);
-	}
-	printf("\n");
 	generateHash(input, input + HASH_OFFSET, sz, *(input + TYPE_OFFSET));
 	
-		
 	printf("New signature: ");
 	for(int i = 0; i < 0x14; i++ ) {
 		printf("%02X ", input[HASH_OFFSET + i]);
@@ -192,10 +188,188 @@ error:
 
 }
 
+int ps1_psv2mcs(const char* psvfile)
+{
+	char dstName[256];
+	uint8_t mcshdr[128];
+	size_t sz;
+	uint8_t *input;
+	FILE *pf;
+	ps1_header_t *ps1h;
+
+    pf = fopen(psvfile, "rb");
+    if(!pf)
+        return 0;
+
+    fseek(pf, 0, SEEK_END);
+    sz = ftell(pf);
+    fseek(pf, 0, SEEK_SET);
+    input = malloc(sz);
+    fread(input, 1, sz, pf);
+    fclose(pf);
+
+	snprintf(dstName, sizeof(dstName), "%s", psvfile);
+	strcpy(strrchr(dstName, '.'), ".mcs");
+	pf = fopen(dstName, "wb");
+	if (!pf) {
+		perror("Failed to open output file");
+		free(input);
+		return 0;
+	}
+	
+	ps1h = (ps1_header_t*)(input + 0x40);
+
+	memset(mcshdr, 0, sizeof(mcshdr));
+	memcpy(mcshdr + 4, &ps1h->saveSize, 4);
+	memcpy(mcshdr + 10, ps1h->prodCode, sizeof(ps1h->prodCode));
+	mcshdr[0] = 0x51;
+	mcshdr[8] = 0xFF;
+	mcshdr[9] = 0xFF;
+
+	for (int x=0; x<127; x++)
+		mcshdr[127] ^= mcshdr[x];
+
+	fwrite(mcshdr, sizeof(mcshdr), 1, pf);
+	fwrite(input + 0x84, sz - 0x84, 1, pf);
+	fclose(pf);
+	free(input);
+
+	printf("MCS generated successfully: %s\n", dstName);
+	return 1;
+}
+
+int ps2_psv2psu(const char *save)
+{
+    u32 dataPos = 0;
+    FILE *psuFile, *psvFile;
+    int numFiles, next;
+    char dstName[256];
+    u8 *data;
+    ps2_McFsEntry entry;
+    ps2_MainDirInfo_t ps2md;
+    ps2_FileInfo_t ps2fi;
+    
+    psvFile = fopen(save, "rb");
+    if(!psvFile)
+        return 0;
+
+    snprintf(dstName, sizeof(dstName), "%s", save);
+    strcpy(strrchr(dstName, '.'), ".psu");
+    psuFile = fopen(dstName, "wb");
+    
+    if(!psuFile)
+    {
+        fclose(psvFile);
+        return 0;
+    }
+
+    // Read main directory entry
+    fseek(psvFile, 0x68, SEEK_SET);
+    fread(&ps2md, sizeof(ps2_MainDirInfo_t), 1, psvFile);
+    numFiles = (ps2md.numberOfFilesInDir);
+
+    memset(&entry, 0, sizeof(entry));
+    memcpy(&entry.created, &ps2md.create, sizeof(sceMcStDateTime));
+    memcpy(&entry.modified, &ps2md.modified, sizeof(sceMcStDateTime));
+    memcpy(entry.name, ps2md.filename, sizeof(entry.name));
+    entry.mode = ps2md.attribute;
+    entry.length = ps2md.numberOfFilesInDir;
+    fwrite(&entry, sizeof(entry), 1, psuFile);
+
+    // "."
+    memset(entry.name, 0, sizeof(entry.name));
+    strcpy(entry.name, ".");
+    entry.length = 0;
+    fwrite(&entry, sizeof(entry), 1, psuFile);
+    numFiles--;
+
+    // ".."
+    strcpy(entry.name, "..");
+    fwrite(&entry, sizeof(entry), 1, psuFile);
+    numFiles--;
+
+    while (numFiles > 0)
+    {
+        fread(&ps2fi, sizeof(ps2_FileInfo_t), 1, psvFile);
+        dataPos = ftell(psvFile);
+
+        memset(&entry, 0, sizeof(entry));
+        memcpy(&entry.created, &ps2fi.create, sizeof(sceMcStDateTime));
+        memcpy(&entry.modified, &ps2fi.modified, sizeof(sceMcStDateTime));
+        memcpy(entry.name, ps2fi.filename, sizeof(entry.name));
+        entry.mode = ps2fi.attribute;
+        entry.length = ps2fi.filesize;
+        fwrite(&entry, sizeof(entry), 1, psuFile);
+
+        ps2fi.positionInFile = (ps2fi.positionInFile);
+        ps2fi.filesize = (ps2fi.filesize);
+        data = malloc(ps2fi.filesize);
+
+        fseek(psvFile, ps2fi.positionInFile, SEEK_SET);
+        fread(data, 1, ps2fi.filesize, psvFile);
+        fwrite(data, 1, ps2fi.filesize, psuFile);
+        free(data);
+
+        next = 1024 - (ps2fi.filesize % 1024);
+        if(next < 1024)
+        {
+            data = malloc(next);
+            memset(data, 0xFF, next);
+            fwrite(data, 1, next, psuFile);
+            free(data);
+        }
+
+        fseek(psvFile, dataPos, SEEK_SET);
+        numFiles--;
+    }
+
+    fclose(psvFile);
+    fclose(psuFile);
+
+    printf("PSU generated successfully: %s\n", dstName);
+    return 1;
+}
+
+int extractPSV(const char* psvfile)
+{
+	uint8_t input[0x40];
+	FILE *pf;
+
+    pf = fopen(psvfile, "rb");
+    if(!pf)
+        return 0;
+
+    fread(input, 1, sizeof(input), pf);
+    fclose(pf);
+
+	if (*(uint32_t*) input != PSV_MAGIC) {
+		printf("Not a .psv file\n");
+		return 0;
+	}
+
+	printf("Exporting %s file...\n", psvfile);
+	
+	switch (input[TYPE_OFFSET])
+	{
+		case 1:
+			ps1_psv2mcs(psvfile);
+			break;
+
+		case 2:
+			ps2_psv2psu(psvfile);
+			break;
+			
+		default:
+			printf("Unsupported .psv type\n");
+			return 0;
+	}
+
+	return 1;
+}
+
 int main(int argc, char **argv)
 {
-	printf("\n psv-save-converter v1.1.1 - (c) 2020 by Bucanero\n");
-	printf(" (based on ps3-psvresigner by @dots_tb)\n\n");
+	printf("\n PSV Save Converter v1.2.0 - (c) 2020 by Bucanero\n\n");
 
 	if (argc != 2) {
 		usage(argv);
@@ -219,6 +393,9 @@ int main(int argc, char **argv)
 
 	else if (endsWith(argv[1], ".xps"))
 		extractXPS(argv[1]);
+
+	else if (endsWith(argv[1], ".psv"))
+		extractPSV(argv[1]);
 
 	else
 		usage(argv);
