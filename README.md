@@ -4,6 +4,8 @@
 
 This tool converts and resigns PS1 and PS2 savegame files to PlayStation 3 `.PSV` save format.
 
+The tool can also export `.PSV` PS3 files back to PS1 (`.mcs`) and PS2 (`.psu`) save formats.
+
 ## Supported formats
 
 - `.mcs` : PS1 MCS File
@@ -12,6 +14,7 @@ This tool converts and resigns PS1 and PS2 savegame files to PlayStation 3 `.PSV
 - `.max` : PS2 ActionReplay Max File
 - `.xps` : PS2 Xploder/SharkPort File
 - `.psu` : PS2 EMS File (uLaunchELF)
+- `.psv` : PS3 PSV File (to PS1 `.mcs`/PS2 `.psu`)
 
 ## Usage
 
