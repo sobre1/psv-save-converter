@@ -12,10 +12,7 @@ int extractMCS(const char* mcsfile)
 	char dstName[128];
 	FILE *pf;
 	psv_header_t psvh;
-	uint8_t tmpFlags[] = {
-		0x00, 0x20, 0x00, 0x00, 0x84, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 
-		0x03, 0x90, 0x00, 0x00};
+	ps1_header_t ps1h;
 
 	pf = fopen(mcsfile, "rb");
 	if (!pf) {
@@ -46,18 +43,21 @@ int extractMCS(const char* mcsfile)
 	}
 	
 	memset(&psvh, 0, sizeof(psv_header_t));
-    psvh.headerSize = 0x00000014;
+	psvh.headerSize = 0x00000014;
 	psvh.saveType = 0x00000001;
-    memcpy(&psvh.magic, "\0VSP", 4);
-    memcpy(&psvh.salt, "www.bucanero.com.ar", 20);
-    
-    fwrite(&psvh, sizeof(psv_header_t), 1, pf);
-	fwrite(tmpFlags, 0x24, 1, pf);
+	memcpy(psvh.magic, "\0VSP", 4);
+	memcpy(psvh.salt, "www.bucanero.com.ar", 20);
 
-	memset(tmpFlags, 0, 0x20);
-	memcpy(tmpFlags, input + 0x0A, 0x14);
-	fwrite(tmpFlags, 0x20, 1, pf);
+	memset(&ps1h, 0, sizeof(ps1_header_t));
+	memcpy(&ps1h.saveSize, input + 4, 4);
+	memcpy(ps1h.prodCode, input + 0x0A, sizeof(ps1h.prodCode));
+	ps1h.startOfSaveData = 0x84;
+	ps1h.blockSize = 0x200;
+	ps1h.dataSize = ps1h.saveSize;
+	ps1h.unknown1 = 0x9003;
 
+	fwrite(&psvh, sizeof(psv_header_t), 1, pf);
+	fwrite(&ps1h, sizeof(ps1_header_t), 1, pf);
 	fwrite(input + 0x80, sz - 0x80, 1, pf);
 	fclose(pf);
 	free(input);
@@ -72,10 +72,7 @@ int extractPSX(const char* mcsfile)
 	char dstName[128];
 	FILE *pf;
 	psv_header_t psvh;
-	uint8_t tmpFlags[] = {
-		0x00, 0x20, 0x00, 0x00, 0x84, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 
-		0x03, 0x90, 0x00, 0x00};
+	ps1_header_t ps1h;
 
 	pf = fopen(mcsfile, "rb");
 	if (!pf) {
@@ -106,18 +103,21 @@ int extractPSX(const char* mcsfile)
 	}
 	
 	memset(&psvh, 0, sizeof(psv_header_t));
-    psvh.headerSize = 0x00000014;
+	psvh.headerSize = 0x00000014;
 	psvh.saveType = 0x00000001;
-    memcpy(&psvh.magic, "\0VSP", 4);
-    memcpy(&psvh.salt, "www.bucanero.com.ar", 20);
-    
-    fwrite(&psvh, sizeof(psv_header_t), 1, pf);
-	fwrite(tmpFlags, 0x24, 1, pf);
+	memcpy(psvh.magic, "\0VSP", 4);
+	memcpy(psvh.salt, "www.bucanero.com.ar", 20);
 
-	memset(tmpFlags, 0, 0x20);
-	memcpy(tmpFlags, input, 0x14);
-	fwrite(tmpFlags, 0x20, 1, pf);
+	memset(&ps1h, 0, sizeof(ps1_header_t));
+	memcpy(ps1h.prodCode, input, sizeof(ps1h.prodCode));
+	ps1h.saveSize = (sz - 0x36) / 0x200;
+	ps1h.startOfSaveData = 0x84;
+	ps1h.blockSize = 0x200;
+	ps1h.dataSize = ps1h.saveSize;
+	ps1h.unknown1 = 0x9003;
 
+	fwrite(&psvh, sizeof(psv_header_t), 1, pf);
+	fwrite(&ps1h, sizeof(ps1_header_t), 1, pf);
 	fwrite(input + 0x36, sz - 0x36, 1, pf);
 	fclose(pf);
 	free(input);

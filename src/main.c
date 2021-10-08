@@ -76,7 +76,7 @@ static void usage(char *argv[])
 	return;
 }
 
-void generateHash(uint8_t *input, uint8_t *dest, size_t sz, int type) {
+void generateHash(uint8_t *input, size_t sz, int type) {
 	struct AES_ctx aes_ctx;
 
 	uint8_t salt[0x40];
@@ -85,7 +85,7 @@ void generateHash(uint8_t *input, uint8_t *dest, size_t sz, int type) {
 	uint8_t *salt_seed = input + SEED_OFFSET;
 	memset(salt , 0, sizeof(salt));
 	
-	printf("Type detected: %x\n", type);
+	printf("Type detected: PS%x\n", type);
 	if(type == 1) {//PS1
 		//idk why the normal cbc doesn't work.
 		AES_init_ctx_iv(&aes_ctx, key[1], iv);
@@ -111,6 +111,9 @@ void generateHash(uint8_t *input, uint8_t *dest, size_t sz, int type) {
 		XorWithIv(laid_paid, key[0]);
 		AES_init_ctx_iv(&aes_ctx, laid_paid, iv);
 		AES_CBC_decrypt_buffer(&aes_ctx, salt, 0x40);
+	} else {
+		printf("Unsupported .psv type\n");
+		return;
 	}
 	
 	memset(salt + 0x14, 0, sizeof(salt) - 0x14);
@@ -134,7 +137,7 @@ void generateHash(uint8_t *input, uint8_t *dest, size_t sz, int type) {
 	SHA1Update(&sha1_ctx_2, salt, 0x40);
 	SHA1Update(&sha1_ctx_2, work_buf, 0x14);
 
-	SHA1Final(dest, &sha1_ctx_2);
+	SHA1Final(input + HASH_OFFSET, &sha1_ctx_2);
 }
 
 void psv_resign(const char* src_file)
@@ -161,7 +164,7 @@ void psv_resign(const char* src_file)
 		goto error;
 	}
 	
-	generateHash(input, input + HASH_OFFSET, sz, *(input + TYPE_OFFSET));
+	generateHash(input, sz, input[TYPE_OFFSET]);
 	
 	printf("New signature: ");
 	for(int i = 0; i < 0x14; i++ ) {
@@ -221,6 +224,7 @@ int ps1_psv2mcs(const char* psvfile)
 
 	memset(mcshdr, 0, sizeof(mcshdr));
 	memcpy(mcshdr + 4, &ps1h->saveSize, 4);
+	memcpy(mcshdr + 56, &ps1h->saveSize, 4);
 	memcpy(mcshdr + 10, ps1h->prodCode, sizeof(ps1h->prodCode));
 	mcshdr[0] = 0x51;
 	mcshdr[8] = 0xFF;
@@ -369,7 +373,7 @@ int extractPSV(const char* psvfile)
 
 int main(int argc, char **argv)
 {
-	printf("\n PSV Save Converter v1.2.0 - (c) 2020 by Bucanero\n\n");
+	printf("\n PSV Save Converter v1.2.1 - (c) 2020 by Bucanero\n\n");
 
 	if (argc != 2) {
 		usage(argv);
