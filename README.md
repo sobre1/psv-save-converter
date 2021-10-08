@@ -1,5 +1,7 @@
 # PSV Save Converter
 [![Downloads](https://img.shields.io/github/downloads/bucanero/psv-save-converter/total.svg?maxAge=3600)](https://github.com/bucanero/psv-save-converter/releases)
+[![Build binaries](https://github.com/bucanero/psv-save-converter/actions/workflows/build.yml/badge.svg)](https://github.com/bucanero/psv-save-converter/actions/workflows/build.yml)
+[![Build Windows binaries](https://github.com/bucanero/psv-save-converter/actions/workflows/build-win.yml/badge.svg)](https://github.com/bucanero/psv-save-converter/actions/workflows/build-win.yml)
 [![License](https://img.shields.io/github/license/bucanero/psv-save-converter.svg)](./LICENSE)
 
 This tool converts and resigns PS1 and PS2 savegame files to PlayStation 3 `.PSV` save format.
