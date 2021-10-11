@@ -110,7 +110,7 @@ int extractPSX(const char* mcsfile)
 
 	memset(&ps1h, 0, sizeof(ps1_header_t));
 	memcpy(ps1h.prodCode, input, sizeof(ps1h.prodCode));
-	ps1h.saveSize = (sz - 0x36) / 0x200;
+	ps1h.saveSize = (sz - 0x36);
 	ps1h.startOfSaveData = 0x84;
 	ps1h.blockSize = 0x200;
 	ps1h.dataSize = ps1h.saveSize;
